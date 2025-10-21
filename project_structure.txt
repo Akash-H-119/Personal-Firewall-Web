@@ -1,0 +1,16 @@
+Personal-Firewall-Pro/
+│
+├─ app.py                 # Flask backend to run the dashboard & integrate sniffer
+├─ sniffer.py             # Scapy packet sniffing & real-time monitoring
+├─ rules_manager.py       # Firewall rules logic (allow/block)
+├─ requirements.txt       # Python dependencies
+│
+├─ templates/
+│   └─ index.html         # Modern dashboard UI (like Personal-Firewall1)
+│
+├─ static/
+│   ├─ index.js           # Socket.IO logic for real-time updates
+│   └─ styles.css         # CSS for dashboard styling
+│
+└─ logs/
+    └─ firewall.log       # Captured blocked/suspicious packets
