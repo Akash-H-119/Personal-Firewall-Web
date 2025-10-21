@@ -68,12 +68,96 @@ class FirewallDashboard:
         self.canvas.get_tk_widget().pack(pady=20)
 
     def show_rules(self):
-        self.clear_content()
-        Label(self.content, text="Rules Tab (Add/Edit/Delete Rules Here)", bg=BG_COLOR, fg="white").pack()
+    self.clear_content()
+    Label(self.content, text="Rules Management", bg=BG_COLOR, fg="white", font=FONT_MEDIUM).pack(pady=10)
+
+    # Treeview table for rules
+    columns = ("ID", "Src IP", "Dst IP", "Protocol", "Src Port", "Dst Port", "Action", "Hits")
+    self.rules_tree = ttk.Treeview(self.content, columns=columns, show="headings")
+    for col in columns:
+        self.rules_tree.heading(col, text=col)
+        self.rules_tree.column(col, width=80)
+    self.rules_tree.pack(fill="both", expand=True, pady=10)
+
+    # Load existing rules
+    self.refresh_rules()
+
+    # Entry fields for adding rules
+    frm = Frame(self.content, bg=BG_COLOR)
+    frm.pack(pady=5)
+    self.src_ip_var = StringVar()
+    self.dst_ip_var = StringVar()
+    self.protocol_var = StringVar()
+    self.src_port_var = StringVar()
+    self.dst_port_var = StringVar()
+    self.action_var = StringVar(value="ALLOW")
+
+    Entry(frm, textvariable=self.src_ip_var, width=12).grid(row=0, column=0, padx=2)
+    Entry(frm, textvariable=self.dst_ip_var, width=12).grid(row=0, column=1, padx=2)
+    Entry(frm, textvariable=self.protocol_var, width=6).grid(row=0, column=2, padx=2)
+    Entry(frm, textvariable=self.src_port_var, width=6).grid(row=0, column=3, padx=2)
+    Entry(frm, textvariable=self.dst_port_var, width=6).grid(row=0, column=4, padx=2)
+    Entry(frm, textvariable=self.action_var, width=6).grid(row=0, column=5, padx=2)
+    Button(frm, text="Add Rule", command=self.add_rule_gui, bg=ACCENT_COLOR).grid(row=0, column=6, padx=5)
+    Button(frm, text="Delete Selected", command=self.delete_rule_gui, bg=ACCENT_COLOR).grid(row=0, column=7, padx=5)
+
+def refresh_rules(self):
+    from firewall.rules import list_rules
+    for i in self.rules_tree.get_children():
+        self.rules_tree.delete(i)
+    for r in list_rules():
+        self.rules_tree.insert("", END, values=(
+            r["id"], r["src_ip"], r["dst_ip"], r["protocol"],
+            r["src_port"], r["dst_port"], r["action"], r["hits"]
+        ))
+
+def add_rule_gui(self):
+    from firewall.rules import add_rule
+    add_rule(
+        src_ip=self.src_ip_var.get(),
+        dst_ip=self.dst_ip_var.get(),
+        protocol=self.protocol_var.get(),
+        src_port=self.src_port_var.get(),
+        dst_port=self.dst_port_var.get(),
+        action=self.action_var.get()
+    )
+    self.refresh_rules()
+
+def delete_rule_gui(self):
+    from firewall.rules import remove_rule
+    selected = self.rules_tree.selection()
+    for sel in selected:
+        rule_id = self.rules_tree.item(sel)["values"][0]
+        remove_rule(rule_id)
+    self.refresh_rules()
 
     def show_monitor(self):
-        self.clear_content()
-        Label(self.content, text="Monitor Tab (Live Packet Feed)", bg=BG_COLOR, fg="white").pack()
+    self.clear_content()
+    Label(self.content, text="Live Packet Monitor", bg=BG_COLOR, fg="white", font=FONT_MEDIUM).pack(pady=10)
+
+    columns = ("Time", "Src IP", "Dst IP", "Protocol")
+    self.monitor_tree = ttk.Treeview(self.content, columns=columns, show="headings")
+    for col in columns:
+        self.monitor_tree.heading(col, text=col)
+        self.monitor_tree.column(col, width=120)
+    self.monitor_tree.pack(fill="both", expand=True, pady=10)
+
+    # Start updating monitor
+    self.update_monitor()
+
+def update_monitor(self):
+    from datetime import datetime
+    self.monitor_tree.delete(*self.monitor_tree.get_children())
+    for pkt in self.sniffer.recent_packets[-50:]:
+        try:
+            src = pkt[IP].src if IP in pkt else "-"
+            dst = pkt[IP].dst if IP in pkt else "-"
+            proto = pkt.proto if IP in pkt else pkt.summary()
+            self.monitor_tree.insert("", END, values=(datetime.now().strftime("%H:%M:%S"), src, dst, proto))
+        except Exception:
+            continue
+    self.root.after(1000, self.update_monitor)
+
 
     def show_logs(self):
         self.clear_content()
