@@ -1,0 +1,23 @@
+:: Step 1: Navigate to your project folder
+cd C:\Users\akash\Documents\Personal-Firewall-Web
+
+:: Step 2: Create a virtual environment
+python -m venv venv
+
+:: Step 3: Activate the virtual environment
+:: For Command Prompt:
+venv\Scripts\activate
+:: For PowerShell, use:
+:: .\venv\Scripts\Activate.ps1
+
+:: Step 4: Upgrade pip (optional but recommended)
+python -m pip install --upgrade pip
+
+:: Step 5: Install all dependencies
+pip install ttkbootstrap scapy matplotlib psutil requests
+
+:: Step 6: Create logs folder
+mkdir logs
+
+:: Step 7: Run the application
+python main.py
